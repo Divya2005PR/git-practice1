@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Registration Form with Full Events</title>
+<style>
+body {
+    font-family: Arial, sans-serif;
+    background: linear-gradient(to right, #74ebd5, #ACB6E5);
+    margin: 0;
+    padding: 0;
+}
+
+.container {
+    width: 550px;
+    margin: 50px auto;
+    background: rgba(255,255,255,0.95);
+    padding: 25px;
+    border-radius: 10px;
+    box-shadow: 0 0 20px rgba(0,0,0,0.2);
+    position: relative;
+}
+
+h2 { text-align: center; margin-bottom: 20px; color: #333; }
+label { font-weight: bold; margin-right: 5px; }
+input, select { width: 100%; padding: 8px; margin: 8px 0 15px; border: 1px solid #ccc; border-radius: 5px; }
+button { padding: 8px 20px; border: none; border-radius: 5px; cursor: pointer; margin-top: 10px; transition:0.3s; }
+button[type="submit"]{ background-color: #28a745; color:white; }
+
+.cards { margin-top: 20px; }
+.card {
+    background: #f9f9f9; padding: 15px; border-radius: 8px; margin-bottom: 15px;
+    display:flex; justify-content:space-between; align-items:center;
+    box-shadow:0 2px 6px rgba(0,0,0,0.1);
+}
+.card-info p{ margin:3px 0; }
+.card-buttons button{ margin-left:5px; }
+.card-buttons button.edit-btn{ background-color:#007bff; color:white; }
+.card-buttons button.delete-btn{ background-color:#dc3545; color:white; }
+
+/* Modals */
+.modal {
+    display:none; position:fixed; z-index:999; left:0; top:0; width:100%; height:100%;
+    overflow:auto; background-color: rgba(0,0,0,0.5);
+}
+.modal-content{
+    background:#fefefe; margin:15% auto; padding:20px; border-radius:10px; width:70%;
+    box-shadow:0 2px 10px rgba(0,0,0,0.3); text-align:center;
+}
+.modal-content h3{ margin-top:0; }
+.modal-content button{ margin-top:15px; padding:8px 15px; border-radius:5px; cursor:pointer; }
+#termsModal .modal-content button{ margin:10px; width:80px; }
+#infoModal .modal-content button{ margin:0 10px; background-color:#28a745; color:white; }
+</style>
+</head>
+<body>
+
+<div class="container" id="formContainer">
+<h2>Registration Form</h2>
+<form id="regForm">
+    <label for="name">Name:</label>
+    <input type="text" id="name" placeholder="Enter Name">
+
+    <label for="email">Email:</label>
+    <input type="text" id="email" placeholder="Enter Email">
+
+    <label for="phone">Phone Number:</label>
+    <input type="text" id="phone" placeholder="10 digit phone number">
+
+    <label for="course">Select Course:</label>
+    <select id="course">
+        <option value="">--Select Course--</option>
+        <option value="Web Development">Web Development</option>
+        <option value="Python Programming">Python Programming</option>
+        <option value="Data Science">Data Science</option>
+        <option value="Machine Learning">Machine Learning</option>
+    </select>
+
+    <label for="password">Password:</label>
+    <input type="password" id="password" placeholder="Enter Password">
+
+    <button type="submit">Register</button>
+</form>
+
+<div class="cards" id="cardsContainer"></div>
+</div>
+
+<!-- Terms & Conditions Modal -->
+<div id="termsModal" class="modal">
+  <div class="modal-content">
+    <h3>Terms & Conditions</h3>
+    <p style="text-align:left;">By registering, you agree to our terms and conditions...</p>
+    <button id="acceptTerms">Accept</button>
+    <button id="declineTerms">Decline</button>
+  </div>
+</div>
+
+<!-- Info Modal -->
+<div id="infoModal" class="modal">
+  <div class="modal-content">
+    <h3>Registration Information</h3>
+    <div id="infoContent" style="text-align:left; margin-bottom:15px;"></div>
+    <button id="editBtn">Edit</button>
+    <button id="deleteBtn">Delete</button>
+    <button id="okBtn">OK</button>
+  </div>
+</div>
+
+<script>
+const form = document.getElementById("regForm");
+const nameInput = document.getElementById("name");
+const emailInput = document.getElementById("email");
+const phoneInput = document.getElementById("phone");
+const passwordInput = document.getElementById("password");
+const courseSelect = document.getElementById("course");
+const cardsContainer = document.getElementById("cardsContainer");
+const formContainer = document.getElementById("formContainer");
+
+const termsModal = document.getElementById("termsModal");
+const acceptTerms = document.getElementById("acceptTerms");
+const declineTerms = document.getElementById("declineTerms");
+
+const infoModal = document.getElementById("infoModal");
+const infoContent = document.getElementById("infoContent");
+const editBtn = document.getElementById("editBtn");
+const deleteBtn = document.getElementById("deleteBtn");
+const okBtn = document.getElementById("okBtn");
+
+let users = [];
+let editIndex = null;
+let tempData = null;
+
+// Validation
+function isNameValid(name){ return /^[A-Za-z\s]+$/.test(name); }
+function isEmailValid(email){ return /^[a-z0-9._%+-]+@gmail\.com$/.test(email); }
+function isPhoneValid(phone){ return /^\d{10}$/.test(phone); }
+
+const inputs = [nameInput,emailInput,phoneInput,courseSelect,passwordInput];
+function validateField(field){
+    const value = field.value.trim();
+    switch(field.id){
+        case "name":
+            if(!value){alert("Name is required!"); return false;}
+            if(!isNameValid(value)){alert("Name letters only!"); return false;}
+            return true;
+        case "email":
+            if(!value){alert("Email required!"); return false;}
+            if(!isEmailValid(value)){alert("Email lowercase @gmail.com!"); return false;}
+            return true;
+        case "phone":
+            if(!value){alert("Phone required!"); return false;}
+            if(!isPhoneValid(value)){alert("Phone must be 10 digits!"); return false;}
+            return true;
+        case "course":
+            if(!value){alert("Select a course!"); return false;}
+            return true;
+        case "password":
+            if(!value){alert("Password required!"); return false;}
+            return true;
+    }
+}
+
+// Enter key navigation
+inputs.forEach((input,index)=>{
+    input.addEventListener("keydown",(e)=>{
+        if(e.key==="Enter"){
+            e.preventDefault();
+            if(validateField(input)){
+                let nextIndex=index+1;
+                if(nextIndex<inputs.length) inputs[nextIndex].focus();
+            }
+        }
+    });
+    // Input event
+    input.addEventListener("input",()=>{ console.log(`${input.id} typing: ${input.value}`); });
+    // Focus & blur
+    input.addEventListener("focus",()=>{ input.style.background="#e0f7fa"; });
+    input.addEventListener("blur",()=>{ input.style.background=""; });
+});
+
+// Mouse move on form container
+formContainer.addEventListener("mousemove",(e)=>{
+    console.log(`Mouse at X:${e.offsetX}, Y:${e.offsetY}`);
+});
+
+// Form submit
+form.addEventListener("submit",(e)=>{
+    e.preventDefault();
+    termsModal.style.display="block"; // Show T&C first
+});
+
+// T&C buttons
+acceptTerms.addEventListener("click",()=>{
+    termsModal.style.display="none";
+    submitFormData();
+});
+declineTerms.addEventListener("click",()=>{
+    termsModal.style.display="none";
+    alert("Accept terms to register!");
+});
+
+// Submit data after validation
+function submitFormData(){
+    let allValid = true;
+    inputs.forEach(input => { if(!validateField(input)) allValid=false; });
+    if(!allValid) return;
+
+    tempData = {
+        name:nameInput.value.trim(),
+        email:emailInput.value.trim(),
+        phone:phoneInput.value.trim(),
+        password:passwordInput.value.trim(),
+        course:courseSelect.value
+    };
+    infoContent.innerHTML = `<p><strong>Name:</strong>${tempData.name}</p>
+                             <p><strong>Email:</strong>${tempData.email}</p>
+                             <p><strong>Phone:</strong>${tempData.phone}</p>
+                             <p><strong>Course:</strong>${tempData.course}</p>`;
+    infoModal.style.display="block";
+}
+
+// Info modal buttons
+editBtn.addEventListener("click",()=>{
+    if(tempData){
+        inputs.forEach(input=> input.value=tempData[input.id]||"");
+        infoModal.style.display="none";
+    }
+});
+deleteBtn.addEventListener("click",()=>{
+    if(confirm("Delete this entry?")){
+        tempData=null;
+        infoModal.style.display="none";
+        alert("Deleted ❌");
+    }
+});
+okBtn.addEventListener("click",()=>{
+    if(tempData){
+        if(editIndex!==null){ users[editIndex]=tempData; editIndex=null; alert("Updated ✏️"); }
+        else{ users.push(tempData); alert("Registered ✅"); }
+        tempData=null;
+        renderCards();
+        form.reset();
+    }
+    infoModal.style.display="none";
+});
+
+// Render cards
+function renderCards(){
+    cardsContainer.innerHTML="";
+    users.forEach((user,index)=>{
+        const card=document.createElement("div");
+        card.className="card";
+
+        const info=document.createElement("div");
+        info.className="card-info";
+        info.innerHTML=`<p><strong>Name:</strong>${user.name}</p>
+                        <p><strong>Email:</strong>${user.email}</p>
+                        <p><strong>Phone:</strong>${user.phone}</p>
+                        <p><strong>Course:</strong>${user.course}</p>`;
+
+        const btnDiv=document.createElement("div");
+        btnDiv.className="card-buttons";
+
+        const editBtnCard=document.createElement("button");
+        editBtnCard.textContent="Edit";
+        editBtnCard.className="edit-btn";
+        editBtnCard.addEventListener("click",()=>{
+            inputs.forEach(input=> input.value=user[input.id]||"");
+            editIndex=index;
+        });
+
+        const deleteBtnCard=document.createElement("button");
+        deleteBtnCard.textContent="Delete";
+        deleteBtnCard.className="delete-btn";
+        deleteBtnCard.addEventListener("click",()=>{
+            if(confirm("Delete this user?")){ users.splice(index,1); renderCards(); alert("Deleted ❌"); }
+        });
+
+        // Mouse hover events
+        card.addEventListener("mouseover",()=>{ card.style.background="#e0f7fa"; });
+        card.addEventListener("mouseout",()=>{ card.style.background="#f9f9f9"; });
+        // Double click on card
+        card.addEventListener("dblclick",()=>{ alert(`Double clicked on ${user.name}`); });
+
+        btnDiv.appendChild(editBtnCard);
+        btnDiv.appendChild(deleteBtnCard);
+        card.appendChild(info);
+        card.appendChild(btnDiv);
+        cardsContainer.appendChild(card);
+    });
+}
+
+// Close modal if clicked outside
+window.addEventListener("click",(e)=>{
+    if(e.target==infoModal) infoModal.style.display="none";
+    if(e.target==termsModal) termsModal.style.display="none";
+});
+</script>
+</body>
+</html>

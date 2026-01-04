@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Registration Form with Validation</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f2f2f2;
+        }
+
+        .container {
+            width: 450px;
+            margin: 80px auto;
+            background: #fff;
+            padding: 25px;
+            border-radius: 8px;
+            box-shadow: 0 0 15px rgba(0,0,0,0.2);
+        }
+
+        h2 {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        label {
+            font-weight: bold;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 8px;
+            margin: 8px 0 15px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+
+        .btn-group {
+            display: flex;
+            justify-content: space-between;
+        }
+
+        button {
+            padding: 8px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        button[type="submit"] {
+            background-color: green;
+            color: white;
+        }
+
+        #deleteBtn {
+            background-color: red;
+            color: white;
+        }
+
+        #status {
+            margin-top: 15px;
+            text-align: center;
+            font-weight: bold;
+            color: darkblue;
+        }
+
+        .error {
+            color: red;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>Registration Form with Validation</h2>
+
+    <form id="regForm">
+        <label for="name">Name:</label>
+        <input type="text" id="name" placeholder="Enter Name">
+
+        <label for="email">Email:</label>
+        <input type="text" id="email" placeholder="Enter Email">
+
+        <label for="phone">Phone Number:</label>
+        <input type="text" id="phone" placeholder="10 digit phone number">
+
+        <label for="password">Password:</label>
+        <input type="password" id="password" placeholder="Enter Password">
+
+        <label>
+            <input type="checkbox" id="terms"> Accept Terms
+        </label>
+
+        <div class="btn-group">
+            <button type="submit">Register</button>
+            <button type="button" id="deleteBtn">Delete</button>
+        </div>
+    </form>
+
+    <p id="status"></p>
+</div>
+
+<script>
+    // DOM elements
+    const form = document.getElementById("regForm");
+    const nameInput = document.getElementById("name");
+    const emailInput = document.getElementById("email");
+    const phoneInput = document.getElementById("phone");
+    const passwordInput = document.getElementById("password");
+    const termsCheck = document.getElementById("terms");
+    const deleteBtn = document.getElementById("deleteBtn");
+    const status = document.getElementById("status");
+
+    // Helper Functions
+    function isNameValid(name) {
+        const regex = /^[A-Za-z\s]+$/; // Letters and spaces only
+        return regex.test(name);
+    }
+
+    function isEmailValid(email) {
+        // No capital letters, must end with @gmail.com
+        const regex = /^[a-z0-9._%+-]+@gmail\.com$/;
+        return regex.test(email);
+    }
+
+    function isPhoneValid(phone) {
+        const regex = /^\d{10}$/; // Exactly 10 digits
+        return regex.test(phone);
+    }
+
+    // ===== Event Listeners =====
+
+    // Form Submit
+    form.addEventListener("submit", function(e){
+        e.preventDefault();
+
+        const name = nameInput.value.trim();
+        const email = emailInput.value.trim();
+        const phone = phoneInput.value.trim();
+        const password = passwordInput.value.trim();
+        const terms = termsCheck.checked;
+
+        // Name validation
+        if(!name) {
+            alert("Name is required!");
+            return;
+        } else if(!isNameValid(name)) {
+            alert("Name should contain letters only!");
+            return;
+        }
+
+        // Email validation
+        if(!email) {
+            alert("Email is required!");
+            return;
+        } else if(!isEmailValid(email)) {
+            alert("Email must be lowercase and end with @gmail.com!");
+            return;
+        }
+
+        // Phone validation
+        if(!phone) {
+            alert("Phone number is required!");
+            return;
+        } else if(!isPhoneValid(phone)) {
+            alert("Phone number must be exactly 10 digits!");
+            return;
+        }
+
+        // Password validation
+        if(!password) {
+            alert("Password is required!");
+            return;
+        }
+
+        // Terms validation
+        if(!terms) {
+            alert("You must accept the terms!");
+            return;
+        }
+
+        // If all validations pass
+        alert("Registration Successful ✅");
+        status.textContent = `Welcome, ${name}!`;
+        form.reset();
+    });
+
+    // Delete Button
+    deleteBtn.addEventListener("click", function(){
+        let confirmDelete = confirm("Are you sure you want to delete all data?");
+        if(confirmDelete){
+            form.reset();
+            status.textContent = "";
+            alert("Data Deleted 🗑️");
+        }
+    });
+
+    // Name Focus / Blur
+    nameInput.addEventListener("focus", () => nameInput.style.backgroundColor="#e0f7fa");
+    nameInput.addEventListener("blur", () => nameInput.style.backgroundColor="white");
+
+    // Email keyup
+    emailInput.addEventListener("keyup", function(){
+        status.textContent = `Typing email: ${emailInput.value}`;
+    });
+
+    // Password change
+    passwordInput.addEventListener("change", () => alert("Password changed!"));
+
+    // Phone input
+    phoneInput.addEventListener("blur", function(){
+        if(phoneInput.value && !isPhoneValid(phoneInput.value)){
+            alert("Phone must be 10 digits!");
+        }
+    });
+
+    // Terms click
+    termsCheck.addEventListener("click", function(){
+        status.textContent = termsCheck.checked ? "Terms Accepted ✅" : "Terms Not Accepted ❌";
+    });
+
+    // Form mouseover / mouseout
+    form.addEventListener("mouseover", () => form.style.border="2px solid #4caf50");
+    form.addEventListener("mouseout", () => form.style.border="none");
+
+    // Double click delete
+    deleteBtn.addEventListener("dblclick", () => alert("Double clicked delete!"));
+</script>
+
+</body>
+</html>
